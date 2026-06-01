@@ -96,11 +96,20 @@ header{display:flex;align-items:center;justify-content:space-between;gap:24px;ma
 .statsub b{display:block;font-family:'Oswald',sans-serif;font-size:26px;color:var(--ink);font-weight:600;margin-top:2px}
 .period .big{font-family:'Unbounded',sans-serif;font-weight:800;font-size:34px;margin-top:16px;background:linear-gradient(120deg,#fff,var(--blue-bright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .period .upd{margin-top:10px;font-size:13px;color:var(--muted);font-weight:600}
-.monthwrap{display:flex;align-items:center;gap:8px;margin-top:14px}
-.monthsel{font-family:'Unbounded',sans-serif;font-weight:800;font-size:30px;color:var(--blue-bright);
-  background:transparent;border:none;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;padding:0;max-width:100%}
-.monthsel option{background:var(--bg-1);color:var(--ink);font-size:15px;font-family:'Manrope',sans-serif;font-weight:600}
-.caret{color:var(--blue-bright);font-size:18px;pointer-events:none;transform:translateY(2px)}
+.ctrlrow{display:flex;align-items:center;gap:7px;margin-top:12px;flex-wrap:wrap}
+.selwrap{display:flex;align-items:center;gap:4px}
+.msel{font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;color:var(--blue-bright);
+  background:rgba(255,255,255,.06);border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px;
+  outline:none;cursor:pointer;-webkit-appearance:none;appearance:none}
+.msel option{background:var(--bg-1);color:var(--ink);font-size:14px;font-weight:600}
+.caret{color:var(--blue-bright);font-size:14px;pointer-events:none;margin-left:-2px}
+.dinp{background:rgba(255,255,255,.06);border:1px solid var(--line-strong);color:var(--ink);color-scheme:dark;
+  font-family:'Manrope',sans-serif;font-size:12px;font-weight:600;border-radius:8px;padding:5px 6px;outline:none;cursor:pointer}
+.dinp:focus,.msel:focus{border-color:var(--blue)}
+.rdash{color:var(--muted)}
+.rbtn{background:var(--blue-deep);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif}
+.rbtn.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--muted);padding:6px 9px}
+.rbtn:hover{filter:brightness(1.12)}
 
 /* ---------- section title ---------- */
 .sec-title{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:17px;letter-spacing:.4px}
@@ -200,7 +209,15 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
     </div>
     <div class="card period reveal" style="animation-delay:.19s">
       <div class="label">📅 Период</div>
-      <div class="monthwrap"><select id="monthSel" class="monthsel" aria-label="Выбор месяца"></select><span class="caret">▾</span></div>
+      <div class="big" id="periodLabel">—</div>
+      <div class="ctrlrow">
+        <div class="selwrap"><select id="monthSel" class="msel" aria-label="Месяц"></select><span class="caret">▾</span></div>
+        <input type="date" id="fromD" class="dinp" aria-label="С">
+        <span class="rdash">–</span>
+        <input type="date" id="toD" class="dinp" aria-label="По">
+        <button id="applyRange" class="rbtn">OK</button>
+        <button id="resetRange" class="rbtn ghost" hidden title="Сбросить к месяцу">↺</button>
+      </div>
       <div class="upd" id="updated">Обновлено сегодня</div>
     </div>
   </section>
@@ -253,10 +270,12 @@ const DEMO = {
 // Live-источник: Apps Script веб-апп рабочей таблицы (doGet → curated JSON).
 // Без ?month — отдаёт текущий месяц, а если в нём ещё нет отчётов, последний с данными.
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbz8R4UNctDyUxhg6ZmsdGkXRX0-EG4_I_YbkPA1GImyGWUIXSh379LoTObQeyzdwjGgyg/exec";
-async function fetchData(month){
-  const url = ENDPOINT + (month ? ('?month=' + encodeURIComponent(month)) : '');
+async function fetchData(params){
+  let qs = '';
+  if (params && params.from && params.to) qs = '?from=' + params.from + '&to=' + params.to;
+  else if (params && params.month) qs = '?month=' + encodeURIComponent(params.month);
   try {
-    const r = await fetch(url, { cache:'no-store' });
+    const r = await fetch(ENDPOINT + qs, { cache:'no-store' });
     const d = await r.json();
     if (d && Array.isArray(d.agents) && d.agents.length) return d;
     throw new Error('empty payload');
@@ -272,12 +291,11 @@ function cls(r){ if(r===null) return 'w'; if(r>=1) return 'g'; if(r>=0.5) return
 function fmt(n){ return n==null ? '—' : n.toLocaleString('ru-RU'); }
 
 function render(data){
+  const pl = document.getElementById('periodLabel'); if (pl) pl.textContent = data.period || '—';
   const sel = document.getElementById('monthSel');
   if (data.months && data.months.length){
     sel.innerHTML = data.months.map(m=>`<option value="${m.key}">${m.label}</option>`).join('');
-    sel.value = data.monthKey || data.months[0].key;
-  } else if (!sel.options.length){
-    sel.innerHTML = `<option>${data.period||''}</option>`;
+    if (data.monthKey) sel.value = data.monthKey;   // в режиме диапазона monthKey=null — селект не трогаем
   }
   if (data.updated) document.getElementById('updated').textContent = data.updated;
 
@@ -366,18 +384,31 @@ function tickClock(){
     String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 }
 
-// выбранный месяц: null = авто (текущий/последний с данными); иначе зафиксированный
-let selMonth = null;
-document.getElementById('monthSel').addEventListener('change', async (e)=>{
-  selMonth = e.target.value;
-  render(await fetchData(selMonth));
+// активный выбор: null = авто (текущий месяц), {month:"YYYY-MM"} или {from,to}
+let sel = null;
+const $ = id => document.getElementById(id);
+$('monthSel').addEventListener('change', async (e)=>{
+  sel = { month: e.target.value };
+  $('fromD').value = ''; $('toD').value = ''; $('resetRange').hidden = true;
+  render(await fetchData(sel));
+});
+$('applyRange').addEventListener('click', async ()=>{
+  const f = $('fromD').value, t = $('toD').value;
+  if (!f || !t){ alert('Укажи обе даты — «с» и «по»'); return; }
+  sel = (f <= t) ? { from:f, to:t } : { from:t, to:f };
+  $('resetRange').hidden = false;
+  render(await fetchData(sel));
+});
+$('resetRange').addEventListener('click', async ()=>{
+  sel = null; $('fromD').value=''; $('toD').value=''; $('resetRange').hidden = true;
+  render(await fetchData(sel));
 });
 
-async function boot(){ render(await fetchData(selMonth)); tickClock(); }
+async function boot(){ render(await fetchData(sel)); tickClock(); }
 boot();
 setInterval(tickClock,15000);
 // авто-обновление данных раз в 3 минуты (для экрана в офисе)
-setInterval(async()=>{ render(await fetchData(selMonth)); }, 180000);
+setInterval(async()=>{ render(await fetchData(sel)); }, 180000);
 </script>
 </body>
 </html>
