@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>АБ РИЭЛТ · Табло отдела продаж</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#070e1c;
+  --bg-1:#0a1730;
+  --bg-2:#0e2042;
+  --ink:#eaf1ff;
+  --muted:#8597b8;
+  --muted-2:#5d6f92;
+  --blue:#2b8cff;
+  --blue-bright:#4ea6ff;
+  --blue-deep:#1457c2;
+  --gold:#ffce4d;
+  --gold-soft:#ffe39a;
+  --silver:#cdd9ea;
+  --bronze:#e0a06b;
+  --good:#3ad29f;
+  --warn:#ffc24b;
+  --bad:#ff6f7d;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.16);
+  --glass:rgba(255,255,255,.045);
+  --glass-2:rgba(255,255,255,.025);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Manrope',sans-serif;
+  background:var(--bg-0);
+  color:var(--ink);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- atmospheric background ---------- */
+.bg{position:fixed;inset:0;z-index:-2;overflow:hidden}
+.bg::before{
+  content:"";position:absolute;inset:-20%;
+  background:
+    radial-gradient(120% 90% at 78% -8%, rgba(255,206,77,.16), transparent 42%),
+    radial-gradient(95% 80% at 12% 8%, rgba(43,140,255,.20), transparent 50%),
+    radial-gradient(120% 120% at 50% 120%, rgba(20,87,194,.22), transparent 55%),
+    linear-gradient(160deg,var(--bg-1),var(--bg-0) 60%);
+  animation:drift 26s ease-in-out infinite alternate;
+}
+@keyframes drift{from{transform:translate3d(-1.5%,-1%,0) scale(1.02)}to{transform:translate3d(1.5%,1.5%,0) scale(1.06)}}
+.grain{position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+
+.wrap{max-width:1640px;margin:0 auto;padding:30px 38px 46px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:16px}
+.logo{
+  width:62px;height:62px;border-radius:16px;flex:none;
+  display:grid;place-items:center;
+  font-family:'Unbounded',sans-serif;font-weight:900;font-size:24px;letter-spacing:-1px;
+  color:#fff;
+  background:linear-gradient(150deg,var(--blue-bright),var(--blue-deep));
+  box-shadow:0 12px 34px rgba(43,140,255,.45),inset 0 1px 0 rgba(255,255,255,.35);
+}
+.brand h1{font-family:'Unbounded',sans-serif;font-weight:800;font-size:26px;letter-spacing:.5px;line-height:1}
+.brand .sub{font-size:13px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:7px;font-weight:600}
+.head-right{display:flex;align-items:center;gap:14px}
+.live{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+  background:var(--glass);border:1px solid var(--line);padding:9px 14px;border-radius:999px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(58,210,159,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(58,210,159,.55)}70%{box-shadow:0 0 0 10px rgba(58,210,159,0)}100%{box-shadow:0 0 0 0 rgba(58,210,159,0)}}
+.clock{font-family:'Oswald',sans-serif;font-size:30px;font-weight:600;letter-spacing:1px;font-variant-numeric:tabular-nums}
+
+/* ---------- hero cards ---------- */
+.hero{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:18px;margin-bottom:22px}
+.card{position:relative;border-radius:22px;padding:24px 26px;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--glass),var(--glass-2));backdrop-filter:blur(10px);overflow:hidden}
+.card .label{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px}
+.leader{border-color:rgba(255,206,77,.4)}
+.leader::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,206,77,.30),transparent 65%);filter:blur(6px)}
+.leader .crown{font-size:18px;filter:drop-shadow(0 2px 6px rgba(255,206,77,.6))}
+.leader .name{font-family:'Unbounded',sans-serif;font-weight:800;font-size:38px;line-height:1.04;margin:16px 0 6px;position:relative}
+.leader .pts{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;color:var(--gold);letter-spacing:.5px;position:relative}
+.leader .pts span{color:var(--gold-soft)}
+.statbig{display:flex;align-items:baseline;gap:12px;margin-top:18px}
+.statbig .num{font-family:'Oswald',sans-serif;font-weight:700;font-size:58px;line-height:.9;font-variant-numeric:tabular-nums}
+.statbig .unit{font-size:15px;color:var(--muted);font-weight:600}
+.statsub{margin-top:14px;display:flex;gap:22px}
+.statsub div{font-size:13px;color:var(--muted);font-weight:600}
+.statsub b{display:block;font-family:'Oswald',sans-serif;font-size:26px;color:var(--ink);font-weight:600;margin-top:2px}
+.period .big{font-family:'Unbounded',sans-serif;font-weight:800;font-size:34px;margin-top:16px;background:linear-gradient(120deg,#fff,var(--blue-bright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.period .upd{margin-top:10px;font-size:13px;color:var(--muted);font-weight:600}
+
+/* ---------- section title ---------- */
+.sec-title{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:17px;letter-spacing:.4px}
+.sec-title .ic{font-size:18px}
+.sec-title .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line-strong),transparent)}
+
+/* ---------- leaderboard ---------- */
+.lb{display:flex;flex-direction:column;gap:9px;margin-bottom:30px}
+.row{display:grid;grid-template-columns:64px 1fr 150px;align-items:center;gap:16px;
+  padding:14px 20px;border-radius:16px;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--glass),var(--glass-2));position:relative;overflow:hidden}
+.row .bar{position:absolute;inset:0;width:0;background:linear-gradient(90deg,rgba(43,140,255,.16),transparent);z-index:0}
+.row>*{position:relative;z-index:1}
+.rank{font-family:'Oswald',sans-serif;font-weight:700;font-size:30px;color:var(--muted-2);text-align:center;font-variant-numeric:tabular-nums}
+.rname{font-weight:700;font-size:21px;letter-spacing:.2px}
+.rpts{font-family:'Oswald',sans-serif;font-weight:700;font-size:30px;text-align:right;font-variant-numeric:tabular-nums}
+.rpts small{font-size:13px;color:var(--muted);font-weight:600;margin-left:6px;font-family:'Manrope'}
+.row.p1{border-color:rgba(255,206,77,.55);background:linear-gradient(180deg,rgba(255,206,77,.14),rgba(255,206,77,.03))}
+.row.p1 .rank,.row.p1 .rpts{color:var(--gold)}
+.row.p1 .bar{background:linear-gradient(90deg,rgba(255,206,77,.20),transparent)}
+.row.p2{border-color:rgba(205,217,234,.4)}
+.row.p2 .rank,.row.p2 .rpts{color:var(--silver)}
+.row.p3{border-color:rgba(224,160,107,.4)}
+.row.p3 .rank,.row.p3 .rpts{color:var(--bronze)}
+.medal{font-size:26px;line-height:1}
+.zero .rname,.zero .rpts{opacity:.6}
+
+/* ---------- metrics table ---------- */
+.tablewrap{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:linear-gradient(180deg,var(--glass),var(--glass-2))}
+table{width:100%;border-collapse:collapse}
+th,td{padding:0;text-align:center}
+thead th{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700;
+  padding:16px 8px;border-bottom:1px solid var(--line-strong);background:rgba(255,255,255,.02)}
+thead th.agent{text-align:left;padding-left:24px;width:230px}
+tbody td{padding:13px 8px;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+.ag{text-align:left;padding-left:24px;font-weight:700;font-size:17px;white-space:nowrap}
+.cell{display:inline-flex;flex-direction:column;align-items:center;gap:5px;min-width:62px}
+.cell .v{font-family:'Oswald',sans-serif;font-weight:600;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .p{font-size:11px;color:var(--muted-2);font-weight:600}
+.cell .track{width:46px;height:4px;border-radius:3px;background:rgba(255,255,255,.09);overflow:hidden}
+.cell .fill{height:100%;width:0;border-radius:3px;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.fill.g{background:var(--good)} .fill.w{background:var(--warn)} .fill.b{background:var(--bad)}
+.v.g{color:var(--good)} .v.w{color:var(--ink)} .v.b{color:var(--ink)}
+.cell .v.zero{color:var(--muted-2)}
+.cell.manual .v{color:var(--gold-soft)}
+tbody tr.total td{background:rgba(43,140,255,.08);border-top:2px solid var(--line-strong)}
+tbody tr.total .ag{font-family:'Unbounded',sans-serif;font-weight:700;font-size:15px;letter-spacing:.5px}
+tbody tr.total .cell .v{font-size:26px}
+tbody tr:hover td{background:rgba(255,255,255,.03)}
+
+.foot{margin-top:18px;text-align:center;font-size:12px;color:var(--muted-2);letter-spacing:1px}
+
+/* entrance */
+.reveal{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+@media(max-width:1100px){
+  .hero{grid-template-columns:1fr}
+  .wrap{padding:22px}
+  .row{grid-template-columns:50px 1fr 120px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+
+<div class="wrap">
+  <header class="reveal">
+    <div class="brand">
+      <div class="logo">АБ</div>
+      <div>
+        <h1>АБ РИЭЛТ ГРУПП</h1>
+        <div class="sub">Краснодар · Табло отдела продаж</div>
+      </div>
+    </div>
+    <div class="head-right">
+      <div class="live"><span class="dot"></span>Live</div>
+      <div class="clock" id="clock">00:00</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="card leader reveal" style="animation-delay:.05s">
+      <div class="label"><span class="crown">👑</span> Лидер месяца</div>
+      <div class="name" id="leaderName">—</div>
+      <div class="pts"><span id="leaderPts">0</span> <span>баллов</span></div>
+    </div>
+    <div class="card reveal" style="animation-delay:.12s">
+      <div class="label">📈 Результат отдела</div>
+      <div class="statbig"><div class="num" id="teamDeals">0</div><div class="unit">сделок<br>за месяц</div></div>
+      <div class="statsub">
+        <div>Брони<b id="teamBron">0</b></div>
+        <div>Встречи<b id="teamMeet">0</b></div>
+        <div>Звонки<b id="teamCalls">0</b></div>
+      </div>
+    </div>
+    <div class="card period reveal" style="animation-delay:.19s">
+      <div class="label">📅 Период</div>
+      <div class="big" id="periodName">Май 2026</div>
+      <div class="upd" id="updated">Обновлено сегодня</div>
+    </div>
+  </section>
+
+  <div class="sec-title reveal" style="animation-delay:.24s"><span class="ic">🏆</span> Рейтинг агентов <span class="rule"></span></div>
+  <div class="lb" id="leaderboard"></div>
+
+  <div class="sec-title reveal" style="animation-delay:.3s"><span class="ic">🎯</span> Показатели · план / факт за месяц <span class="rule"></span></div>
+  <div class="tablewrap reveal" style="animation-delay:.34s">
+    <table>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="foot">Данные обновляются автоматически из рабочей таблицы · Вал вносится вручную</div>
+</div>
+
+<script>
+/* =====================================================================
+   ДАННЫЕ. Сейчас — реальные майские цифры (зашиты для предпросмотра).
+   Позже fetchData() заменим на запрос к Apps Script / Google Sheet,
+   формат вернём ровно такой же — рендер менять не придётся.
+   ===================================================================== */
+const METRICS = [
+  {key:'встречи', name:'Встречи'},
+  {key:'банеры',  name:'Банеры'},
+  {key:'ад',      name:'АД'},
+  {key:'двоу',    name:'ДВОУ'},
+  {key:'звонки',  name:'Звонки'},
+  {key:'брони',   name:'Брони'},
+  {key:'сделки',  name:'Сделки'},
+  {key:'вал',     name:'Вал', manual:true},
+];
+
+// каждое значение: [факт, план]
+const DEMO = {
+  period:'Май 2026',
+  agents:[
+    {name:'Золотарёв Константин', score:600, встречи:[7,20],  банеры:[0,3], ад:[0,3], двоу:[0,3], звонки:[60,330],  брони:[2,3], сделки:[0,3], вал:[null,null]},
+    {name:'Макухин Владислав',    score:500, встречи:[11,8],  банеры:[0,3], ад:[0,2], двоу:[0,2], звонки:[101,53],  брони:[0,1], сделки:[1,1], вал:[null,null]},
+    {name:'Голубчик Андрей',      score:500, встречи:[1,8],   банеры:[0,3], ад:[0,2], двоу:[0,2], звонки:[0,53],    брони:[0,1], сделки:[1,1], вал:[null,null]},
+    {name:'Филоненко Станислав',  score:0,   встречи:[4,8],   банеры:[0,3], ад:[0,2], двоу:[0,2], звонки:[122,53],  брони:[0,1], сделки:[0,1], вал:[null,null]},
+    {name:'Худышкина Варвара',    score:0,   встречи:[7,8],   банеры:[1,3], ад:[0,2], двоу:[0,2], звонки:[99,53],   брони:[0,1], сделки:[0,1], вал:[null,null]},
+    {name:'Макеева Юлиана',       score:0,   встречи:[5,8],   банеры:[1,3], ад:[0,2], двоу:[0,2], звонки:[45,53],   брони:[0,1], сделки:[0,1], вал:[null,null]},
+    {name:'Молокаева Алина',      score:0,   встречи:[0,8],   банеры:[0,3], ад:[0,2], двоу:[0,2], звонки:[0,53],    брони:[0,1], сделки:[0,1], вал:[null,null]},
+  ]
+};
+
+async function fetchData(){
+  // TODO: заменить на live: const r = await fetch(ENDPOINT); return await r.json();
+  return DEMO;
+}
+
+/* ---------------- render ---------------- */
+function pct(f,p){ if(!p||p<=0) return null; return f/p; }
+function cls(r){ if(r===null) return 'w'; if(r>=1) return 'g'; if(r>=0.5) return 'w'; return 'b'; }
+function fmt(n){ return n==null ? '—' : n.toLocaleString('ru-RU'); }
+
+function render(data){
+  document.getElementById('periodName').textContent = data.period;
+
+  const ranked = [...data.agents].sort((a,b)=>b.score-a.score);
+  const leader = ranked[0];
+  document.getElementById('leaderName').textContent = leader.score>0 ? leader.name : '—';
+  countUp(document.getElementById('leaderPts'), leader.score);
+
+  // team totals
+  const sum = k => data.agents.reduce((s,a)=> s + (a[k]&&a[k][0]?a[k][0]:0), 0);
+  countUp(document.getElementById('teamDeals'), sum('сделки'));
+  document.getElementById('teamBron').textContent  = sum('брони');
+  document.getElementById('teamMeet').textContent  = sum('встречи');
+  document.getElementById('teamCalls').textContent = sum('звонки').toLocaleString('ru-RU');
+
+  // leaderboard
+  const maxScore = Math.max(...ranked.map(a=>a.score),1);
+  const lb = document.getElementById('leaderboard'); lb.innerHTML='';
+  const medals=['🥇','🥈','🥉'];
+  let lastScore=null, lastPlace=0;
+  ranked.forEach((a,i)=>{
+    const place = (a.score===lastScore)?lastPlace:(i+1); lastScore=a.score; lastPlace=place;
+    const div=document.createElement('div');
+    div.className='row reveal'+(a.score>0&&place<=3?' p'+place:'')+(a.score<=0?' zero':'');
+    div.style.animationDelay=(0.36+i*0.05)+'s';
+    const medal = (a.score>0&&place<=3)?`<span class="medal">${medals[place-1]}</span>`:place;
+    div.innerHTML=`<div class="bar"></div>
+      <div class="rank">${medal}</div>
+      <div class="rname">${a.name}</div>
+      <div class="rpts">${a.score}<small>б</small></div>`;
+    lb.appendChild(div);
+    requestAnimationFrame(()=>{ div.querySelector('.bar').style.transition='width 1.2s cubic-bezier(.2,.8,.2,1)';
+      div.querySelector('.bar').style.width=(18+ a.score/maxScore*82)+'%'; });
+  });
+
+  // table head
+  const thead=document.getElementById('thead');
+  thead.innerHTML='<th class="agent">Агент</th>'+METRICS.map(m=>`<th>${m.name}</th>`).join('');
+
+  // table body
+  const tbody=document.getElementById('tbody'); tbody.innerHTML='';
+  data.agents.forEach((a,ri)=>{
+    const tr=document.createElement('tr');
+    let cells=`<td class="ag">${a.name}</td>`;
+    METRICS.forEach(m=>{
+      const v=a[m.key]||[null,null]; const f=v[0], p=v[1]; const r=pct(f,p); const c=cls(r);
+      const zero = (f===0)?' zero':'';
+      const manual = m.manual?' manual':'';
+      cells+=`<td><div class="cell${manual}">
+        <div class="v ${c}${zero}">${fmt(f)}</div>
+        <div class="p">${p==null?'':'план '+p}</div>
+        ${m.manual?'':`<div class="track"><div class="fill ${c}" data-w="${r==null?0:Math.min(r,1)*100}"></div></div>`}
+      </div></td>`;
+    });
+    tr.innerHTML=cells; tbody.appendChild(tr);
+  });
+
+  // totals row
+  const tr=document.createElement('tr'); tr.className='total';
+  let tc=`<td class="ag">ИТОГО ОТДЕЛ</td>`;
+  METRICS.forEach(m=>{
+    if(m.manual){ tc+=`<td><div class="cell manual"><div class="v">—</div></div></td>`; return; }
+    const tot=data.agents.reduce((s,a)=>s+((a[m.key]&&a[m.key][0])||0),0);
+    const totP=data.agents.reduce((s,a)=>s+((a[m.key]&&a[m.key][1])||0),0);
+    const r=pct(tot,totP);
+    tc+=`<td><div class="cell"><div class="v ${cls(r)}">${fmt(tot)}</div><div class="p">${totP?'план '+totP:''}</div></div></td>`;
+  });
+  tr.innerHTML=tc; tbody.appendChild(tr);
+
+  // animate bars
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%');
+  },120));
+}
+
+function countUp(el,target){
+  const dur=900, t0=performance.now();
+  function step(t){ const k=Math.min((t-t0)/dur,1); const e=1-Math.pow(1-k,3);
+    el.textContent=Math.round(target*e).toLocaleString('ru-RU'); if(k<1)requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+}
+
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent=
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+async function boot(){ render(await fetchData()); tickClock(); }
+boot();
+setInterval(tickClock,15000);
+// авто-обновление данных раз в 3 минуты (для экрана в офисе)
+setInterval(async()=>{ render(await fetchData()); }, 180000);
+</script>
+</body>
+</html>
