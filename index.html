@@ -96,6 +96,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:24px;ma
 .statsub b{display:block;font-family:'Oswald',sans-serif;font-size:26px;color:var(--ink);font-weight:600;margin-top:2px}
 .period .big{font-family:'Unbounded',sans-serif;font-weight:800;font-size:34px;margin-top:16px;background:linear-gradient(120deg,#fff,var(--blue-bright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .period .upd{margin-top:10px;font-size:13px;color:var(--muted);font-weight:600}
+.monthwrap{display:flex;align-items:center;gap:8px;margin-top:14px}
+.monthsel{font-family:'Unbounded',sans-serif;font-weight:800;font-size:30px;color:var(--blue-bright);
+  background:transparent;border:none;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;padding:0;max-width:100%}
+.monthsel option{background:var(--bg-1);color:var(--ink);font-size:15px;font-family:'Manrope',sans-serif;font-weight:600}
+.caret{color:var(--blue-bright);font-size:18px;pointer-events:none;transform:translateY(2px)}
 
 /* ---------- section title ---------- */
 .sec-title{display:flex;align-items:center;gap:12px;margin:6px 4px 14px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:17px;letter-spacing:.4px}
@@ -195,7 +200,7 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
     </div>
     <div class="card period reveal" style="animation-delay:.19s">
       <div class="label">📅 Период</div>
-      <div class="big" id="periodName">Май 2026</div>
+      <div class="monthwrap"><select id="monthSel" class="monthsel" aria-label="Выбор месяца"></select><span class="caret">▾</span></div>
       <div class="upd" id="updated">Обновлено сегодня</div>
     </div>
   </section>
@@ -248,9 +253,10 @@ const DEMO = {
 // Live-источник: Apps Script веб-апп рабочей таблицы (doGet → curated JSON).
 // Без ?month — отдаёт текущий месяц, а если в нём ещё нет отчётов, последний с данными.
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbz8R4UNctDyUxhg6ZmsdGkXRX0-EG4_I_YbkPA1GImyGWUIXSh379LoTObQeyzdwjGgyg/exec";
-async function fetchData(){
+async function fetchData(month){
+  const url = ENDPOINT + (month ? ('?month=' + encodeURIComponent(month)) : '');
   try {
-    const r = await fetch(ENDPOINT, { cache:'no-store' });
+    const r = await fetch(url, { cache:'no-store' });
     const d = await r.json();
     if (d && Array.isArray(d.agents) && d.agents.length) return d;
     throw new Error('empty payload');
@@ -266,7 +272,13 @@ function cls(r){ if(r===null) return 'w'; if(r>=1) return 'g'; if(r>=0.5) return
 function fmt(n){ return n==null ? '—' : n.toLocaleString('ru-RU'); }
 
 function render(data){
-  document.getElementById('periodName').textContent = data.period;
+  const sel = document.getElementById('monthSel');
+  if (data.months && data.months.length){
+    sel.innerHTML = data.months.map(m=>`<option value="${m.key}">${m.label}</option>`).join('');
+    sel.value = data.monthKey || data.months[0].key;
+  } else if (!sel.options.length){
+    sel.innerHTML = `<option>${data.period||''}</option>`;
+  }
   if (data.updated) document.getElementById('updated').textContent = data.updated;
 
   const ranked = [...data.agents].sort((a,b)=>b.score-a.score);
@@ -354,11 +366,18 @@ function tickClock(){
     String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 }
 
-async function boot(){ render(await fetchData()); tickClock(); }
+// выбранный месяц: null = авто (текущий/последний с данными); иначе зафиксированный
+let selMonth = null;
+document.getElementById('monthSel').addEventListener('change', async (e)=>{
+  selMonth = e.target.value;
+  render(await fetchData(selMonth));
+});
+
+async function boot(){ render(await fetchData(selMonth)); tickClock(); }
 boot();
 setInterval(tickClock,15000);
 // авто-обновление данных раз в 3 минуты (для экрана в офисе)
-setInterval(async()=>{ render(await fetchData()); }, 180000);
+setInterval(async()=>{ render(await fetchData(selMonth)); }, 180000);
 </script>
 </body>
 </html>
