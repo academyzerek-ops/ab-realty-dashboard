@@ -245,9 +245,19 @@ const DEMO = {
   ]
 };
 
+// Live-источник: Apps Script веб-апп рабочей таблицы (doGet → curated JSON).
+// Без ?month — отдаёт текущий месяц, а если в нём ещё нет отчётов, последний с данными.
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbz8R4UNctDyUxhg6ZmsdGkXRX0-EG4_I_YbkPA1GImyGWUIXSh379LoTObQeyzdwjGgyg/exec";
 async function fetchData(){
-  // TODO: заменить на live: const r = await fetch(ENDPOINT); return await r.json();
-  return DEMO;
+  try {
+    const r = await fetch(ENDPOINT, { cache:'no-store' });
+    const d = await r.json();
+    if (d && Array.isArray(d.agents) && d.agents.length) return d;
+    throw new Error('empty payload');
+  } catch(e){
+    console.warn('live fetch не удался → показываю DEMO', e);
+    return DEMO;
+  }
 }
 
 /* ---------------- render ---------------- */
@@ -257,6 +267,7 @@ function fmt(n){ return n==null ? '—' : n.toLocaleString('ru-RU'); }
 
 function render(data){
   document.getElementById('periodName').textContent = data.period;
+  if (data.updated) document.getElementById('updated').textContent = data.updated;
 
   const ranked = [...data.agents].sort((a,b)=>b.score-a.score);
   const leader = ranked[0];
