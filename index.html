@@ -200,7 +200,10 @@ tbody tr:hover td{background:rgba(255,255,255,.03)}
     </div>
     <div class="card reveal" style="animation-delay:.12s">
       <div class="label">📈 Результат отдела</div>
-      <div class="statbig"><div class="num" id="teamDeals">0</div><div class="unit">сделок<br>за месяц</div></div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:18px;">
+        <div class="statbig" style="margin-top:0"><div class="num" id="teamDeals">0</div><div class="unit">сделок<br>за месяц</div></div>
+        <div class="statbig" style="margin-top:0"><div class="num" id="teamVal">0</div><div class="unit">выручка (вал)<br>рублей</div></div>
+      </div>
       <div class="statsub">
         <div>Брони<b id="teamBron">0</b></div>
         <div>Встречи<b id="teamMeet">0</b></div>
@@ -307,6 +310,7 @@ function render(data){
   // team totals
   const sum = k => data.agents.reduce((s,a)=> s + (a[k]&&a[k][0]?a[k][0]:0), 0);
   countUp(document.getElementById('teamDeals'), sum('сделки'));
+  countUp(document.getElementById('teamVal'), sum('вал'));
   document.getElementById('teamBron').textContent  = sum('брони');
   document.getElementById('teamMeet').textContent  = sum('встречи');
   document.getElementById('teamCalls').textContent = sum('звонки').toLocaleString('ru-RU');
@@ -357,7 +361,7 @@ function render(data){
   const tr=document.createElement('tr'); tr.className='total';
   let tc=`<td class="ag">ИТОГО ОТДЕЛ</td>`;
   METRICS.forEach(m=>{
-    if(m.manual){ tc+=`<td><div class="cell manual"><div class="v">—</div></div></td>`; return; }
+    if(m.manual && m.key !== 'вал'){ tc+=`<td><div class="cell manual"><div class="v">—</div></div></td>`; return; }
     const tot=data.agents.reduce((s,a)=>s+((a[m.key]&&a[m.key][0])||0),0);
     const totP=data.agents.reduce((s,a)=>s+((a[m.key]&&a[m.key][1])||0),0);
     const r=pct(tot,totP);
